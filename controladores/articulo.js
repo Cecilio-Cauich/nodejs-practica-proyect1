@@ -88,7 +88,12 @@ const crear = (req,res)=>{
 
 const listar = (req,res)=>{
     let consulta = Articulo.find({})
-                           .sort({fecha: -1})
+
+    if(req.params.ultimos){
+        consulta.limit(Number(req.params.ultimos));
+    } 
+
+    consulta.sort({fecha: -1})
                            .exec()
                            .then((articulos)=>{
         if(!articulos){
@@ -100,15 +105,40 @@ const listar = (req,res)=>{
 
         return res.status(200).send({
             status: "succes",
+            contador: articulos.length,
             articulos
         });
 
     });
 }
 
+const uno = (req,res) =>{
+    //Recogger una id por la url
+    let id = req.params.id;
+    
+    Articulo.findById(id).then((articulo)=>{
+
+        //Si no encuentra el resultado
+        if(!articulo){
+            return res.status(404).json({
+                status: "error",
+                mensaje: "No se ha encontrado el articulo"
+            });
+        }
+
+        //devuelve resultado
+        return res.status(200).json({
+            status: "succes",
+            articulo
+        });
+    });
+}
+
+
 module.exports = {
     prueba,
     curso,
     crear,
-    listar
+    listar,
+    uno
 }
