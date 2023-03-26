@@ -16,13 +16,14 @@ const puerto = 3900;
 app.use(cors());
 
 //convertir body a objeto js
-app.use(express.json());
+app.use(express.json()); //recibir datos con content type app/json
+app.use(express.urlencoded({extended:true})); //
 
 //RUTAS
  const rutas_articulo = require("./rutas/articulo");
 
 //cargar rutas
-app.use("/api",rutas_articulo); 
+app.use("/api",rutas_articulo);
 
 //RUTAS PRUEBA HARCODEADAS
 
