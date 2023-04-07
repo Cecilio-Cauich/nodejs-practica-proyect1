@@ -1,5 +1,6 @@
 const Articulo = require("../modelos/Articulo");
 const {validarArticulo} = require("../helpers/validar");
+const fs = require("fs");
 
 const prueba = (req,res)=>{
     return res.status(200).json({
@@ -183,6 +184,48 @@ const editar = (req,res)=>{
 
 }
 
+const subir = (req,res) => {
+
+    //Configurar Multer
+
+    //Recoger el fichero de imagen subido
+    if(!req.file && !req.files){
+        return res.status(404).json({
+            status: "Error",
+            mensaje: "Petición invalida"
+        })
+    }
+
+    //Nombre del archivo
+    let archivo = req.file.originalname;
+
+    //Extension del archivo
+    let archivo_split = archivo.split("\.");
+    let extension = archivo_split[1];
+
+    //Comprobar extensión correcta
+    if(extension!= "png" && extension!="jpg" &&
+       extension != "gpeg" && extension !="gif"){
+        //Borrar archivo y dar respuestar
+        fs.unlink(req.file.path,()=>{
+            return res.status(400).json({
+                status:"error",
+                mensaje: "Imagen no valido"
+            })
+        })
+
+    }else{
+        return res.status(200).json({
+            status: "success",
+            extension,
+            files: req.file
+        })
+
+    }
+
+    //Actualizar articulo al que corresponde la imagen
+}
+
 module.exports = {
     prueba,
     curso,
@@ -190,5 +233,6 @@ module.exports = {
     listar,
     uno,
     borrar,
-    editar
+    editar,
+    subir
 }
