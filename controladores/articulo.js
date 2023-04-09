@@ -1,6 +1,7 @@
 const Articulo = require("../modelos/Articulo");
 const {validarArticulo} = require("../helpers/validar");
 const fs = require("fs");
+const path = require("path");
 
 const prueba = (req,res)=>{
     return res.status(200).json({
@@ -32,7 +33,7 @@ const crear = (req,res)=>{
     } catch (error) {
         return res.status(400).json({
             status: "error",
-            mensaje: "Falta datos por enviar",
+            mensaje: "Falta datos por enviar1",
         })
     }
 
@@ -62,7 +63,7 @@ const crear = (req,res)=>{
         if (!articuloGuardado) {
             return res.status(400).json({
                 status: "error",
-                message: "Falta datos por mandar"
+                message: "Falta datos por mandar2"
             });
         }
  
@@ -215,15 +216,73 @@ const subir = (req,res) => {
         })
 
     }else{
-        return res.status(200).json({
-            status: "success",
-            extension,
-            files: req.file
-        })
+        //actualizar objeto con la imagen
+
+        //recoger ID
+        let articuloId = req.params.id;
+
+        //buscar y actualizar
+        Articulo.findOneAndUpdate({_id: articuloId}, {imagen:req.file.filename},{new:true}).then(articuloActualizado=>{
+    
+            if(!articuloActualizado){
+                
+                return res.status(500).json({
+                    status:"error",
+                    mensaje:"Error al actualizar"
+                })
+            }
+    
+            return res.status(200).json({
+                status:"success",
+                articulo: articuloActualizado
+            })
+        });
 
     }
+  
+}
 
-    //Actualizar articulo al que corresponde la imagen
+const imagen = (req,res)=>{
+    let fichero = req.params.fichero;
+    let ruta_fisica = "./imagenes/articulos/"+fichero;
+
+    fs.stat(ruta_fisica,(error,existe)=>{
+        if(existe){
+            return res.sendFile(path.resolve(ruta_fisica));
+        }else{
+            return res.status(404).json({
+                status:"error",
+                mensaje:"La imagen no existe"
+            })
+        }
+    })
+}
+
+const buscar = (req,res) =>{
+    //Sacar el string de busqueda
+    let busqueda = req.params.busqueda;
+    //Find OR
+    Articulo.find({
+        "$or":[
+            {"titulo":{"$regex":busqueda, "$options":"i"}},
+            {"contenido":{"$regex":busqueda, "$options":"i"}}
+        ]
+    }).sort({fecha:-1})//ordenado descendentemente
+    .exec().then((articulosEncotrado)=>{
+
+        if(!articulosEncotrado || articulosEncotrado.length <= 0){
+            return res.status(404).json({
+                status : "error",
+                error: "No se ha encontrado artículos"
+
+            });
+        }
+
+        return res.status(200).json({
+            status: "success",
+            articulos: articulosEncotrado
+        })
+    });
 }
 
 module.exports = {
@@ -234,5 +293,7 @@ module.exports = {
     uno,
     borrar,
     editar,
-    subir
+    subir,
+    imagen,
+    buscar
 }
